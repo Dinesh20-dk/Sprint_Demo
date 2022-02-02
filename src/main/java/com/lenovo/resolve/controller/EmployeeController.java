@@ -25,4 +25,9 @@ public class EmployeeController {
     public String getEmployees() {
         return "Welcome!";
     }
+	
+	 @RequestMapping(value = "/getData", method = RequestMethod.GET)
+	    public String getData() {
+	        return "Welcome!";
+	    }
 }
