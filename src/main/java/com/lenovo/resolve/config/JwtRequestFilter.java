@@ -1,9 +1,11 @@
 package com.lenovo.resolve.config;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,30 +29,39 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 	@Autowired
 	private JwtTokenUtil jwtTokenUtil;
+	
+	public static final String MY_COOKIE_NAME = "Resolve";
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
 			throws ServletException, IOException {
-
+		
 		final String requestTokenHeader = request.getHeader("Authorization");
-
 		String username = null;
 		String jwtToken = null;
-		// JWT Token is in the form "Bearer token". Remove Bearer word and get only the Token
+		// JWT Token is in the form "Bearer token". Remove Bearer word and get only the
+		// Token
 		if (requestTokenHeader != null) {
 			jwtToken = requestTokenHeader.substring(8);
+			System.out.println("Token2222-->"+jwtToken);
 			try {
 				username = jwtTokenUtil.getUsernameFromToken(jwtToken);
+				System.out.println("username2222-->"+username);
 			} catch (IllegalArgumentException e) {
 				System.out.println("Unable to get JWT Token");
 			} catch (ExpiredJwtException e) {
 				System.out.println("JWT Token has expired");
 			}
 		} else {
-			logger.warn("JWT Token does not begin with Bearer String");
+			if (request.getCookies() != null) {
+				jwtToken = getCookieValue(request, MY_COOKIE_NAME);
+				System.out.println("Token1111-->"+jwtToken);
+				username = jwtTokenUtil.getUsernameFromToken(jwtToken);
+				System.out.println("username11111-->"+username);
+			}
 		}
 
-		//Once we get the token validate it.
+		// Once we get the token validate it.
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
 			UserDetails userDetails = this.jwtUserDetailsService.loadUserByUsername(username);
@@ -63,11 +74,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 				usernamePasswordAuthenticationToken
 						.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				// After setting the Authentication in the context, we specify
-				// that the current user is authenticated. So it passes the Spring Security Configurations successfully.
+				// that the current user is authenticated. So it passes the Spring Security
+				// Configurations successfully.
 				SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 			}
 		}
 		chain.doFilter(request, response);
+	}
+
+	private String getCookieValue(HttpServletRequest req, String cookieName) {
+		return Arrays.stream(req.getCookies()).filter(c -> c.getName().equals(cookieName)).findFirst()
+				.map(Cookie::getValue).orElse(null);
 	}
 
 }

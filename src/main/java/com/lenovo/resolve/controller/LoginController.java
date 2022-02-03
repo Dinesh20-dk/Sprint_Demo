@@ -2,6 +2,9 @@ package com.lenovo.resolve.controller;
 
 
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -50,14 +53,23 @@ public class LoginController {
 )
 
 	@RequestMapping(value = "/authenticate", method = RequestMethod.POST)
-	public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
+	public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest, HttpServletResponse response) throws Exception {
 
 		authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
 
 		final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 
 		final String token = jwtTokenUtil.generateToken(userDetails);
-
+		
+		
+		final Cookie cookie = new Cookie("Resolve", token);
+		//cookie.setDomain(this.cookieDomain);
+//		cookie.setSecure(true);
+		cookie.setHttpOnly(true);
+		//cookie.setMaxAge(maxAge);
+		response.addCookie(cookie);
+		
+		//response.addCookie(new Cookie("Resolve", token));
 		return ResponseEntity.ok(new JwtResponse(token));
 	}
 

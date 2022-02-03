@@ -31,6 +31,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	private JwtRequestFilter jwtRequestFilter;
 	
 	
+	
+	
 
 	@Autowired
 	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
@@ -93,7 +95,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	        				.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
 	        		// Add a filter to validate the tokens with every request
+	      //  http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 	        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+	        
+	      
 	                        
 	    }
 
